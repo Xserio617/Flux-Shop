@@ -1,0 +1,292 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .ai-generator-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    .ai-generator-box h3 {
+        margin: 0 0 15px 0;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .ai-generator-box p {
+        margin: 0 0 15px 0;
+        opacity: 0.9;
+        font-size: 14px;
+    }
+    .ai-input-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .ai-input-group input {
+        flex: 1;
+        padding: 12px 15px;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+    }
+    .ai-input-group select {
+        padding: 12px 15px;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        min-width: 150px;
+    }
+    .ai-generate-btn {
+        background: white;
+        color: #667eea;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 15px;
+        transition: all 0.3s;
+    }
+    .ai-generate-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .ai-generate-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    .ai-result {
+        background: rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+        display: none;
+    }
+    .ai-result.show {
+        display: block;
+    }
+    .ai-result-item {
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .ai-result-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    .ai-result-label {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-bottom: 5px;
+    }
+    .ai-result-value {
+        font-size: 14px;
+    }
+    .ai-apply-btn {
+        background: #22c55e;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+    .ai-apply-btn:hover {
+        background: #16a34a;
+    }
+    .ai-image-preview {
+        max-width: 200px;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ai-generator-box">
+    <h3>🤖 AI Ürün Asistanı</h3>
+    <p>Sadece ürün ismini yazın, AI sizin için açıklama, fiyat ve görsel önersin!</p>
+    
+    <div class="ai-input-group">
+        <input type="text" id="ai-product-name" placeholder="Ürün ismini yazın... (örn: iPhone 15 Pro Max)">
+        <select id="ai-category">
+            <option value="" data-id="">Kategori Seçin</option>
+            {% for category in categories %}
+            <option value="{{ category.name }}" data-id="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" class="ai-generate-btn" id="ai-generate-btn" onclick="generateWithAI()">
+            ✨ AI ile Oluştur
+        </button>
+    </div>
+    
+    <div class="ai-result" id="ai-result">
+        <div class="ai-result-item">
+            <div class="ai-result-label">📝 Açıklama</div>
+            <div class="ai-result-value" id="ai-description"></div>
+        </div>
+        <div class="ai-result-item">
+            <div class="ai-result-label">💰 Önerilen Fiyat (Akakçe Piyasa Fiyatı)</div>
+            <div class="ai-result-value" id="ai-price"></div>
+            <div class="ai-result-value" id="ai-akakce-note" style="font-size: 11px; opacity: 0.7; margin-top: 5px;"></div>
+        </div>
+        <div class="ai-result-item">
+            <div class="ai-result-label">🏷️ Etiketler</div>
+            <div class="ai-result-value" id="ai-tags"></div>
+        </div>
+        <div class="ai-result-item">
+            <div class="ai-result-label">🖼️ Önerilen Görsel</div>
+            <img id="ai-image" class="ai-image-preview" src="" alt="Önizleme">
+            <div id="ai-image-saved" style="font-size: 11px; margin-top: 5px; color: #22c55e;"></div>
+        </div>
+        <button type="button" class="ai-apply-btn" onclick="applyAIResult()">
+            ✅ Forma Uygula
+        </button>
+    </div>
+</div>
+
+<script>
+let aiResultData = null;
+
+async function generateWithAI() {
+    const productName = document.getElementById('ai-product-name').value.trim();
+    const category = document.getElementById('ai-category').value;
+    const btn = document.getElementById('ai-generate-btn');
+    
+    if (!productName) {
+        alert('Lütfen ürün ismini yazın!');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-spinner"></span> Oluşturuluyor...';
+    
+    try {
+        const response = await fetch('/api/ai/generate-product/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                product_name: productName,
+                category: category
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            aiResultData = data;
+            
+            document.getElementById('ai-description').textContent = data.description;
+            document.getElementById('ai-price').textContent = data.suggested_price.toLocaleString('tr-TR') + ' TL';
+            
+            // Akakçe fiyat notu
+            const akakceNote = document.getElementById('ai-akakce-note');
+            if (data.akakce_price) {
+                akakceNote.textContent = '✅ Fiyat Akakçe.com piyasa verilerinden alındı';
+                akakceNote.style.color = '#22c55e';
+            } else {
+                akakceNote.textContent = '⚠️ Akakçe\'de bulunamadı, AI tahmini fiyat';
+                akakceNote.style.color = '#fbbf24';
+            }
+            
+            document.getElementById('ai-tags').textContent = data.suggested_tags.join(', ');
+            
+            // Görsel
+            if (data.suggested_image_url) {
+                document.getElementById('ai-image').src = data.suggested_image_url;
+            }
+            
+            // Görsel kaydetme durumu
+            const imageSavedNote = document.getElementById('ai-image-saved');
+            if (data.saved_image_path) {
+                imageSavedNote.textContent = '✅ Görsel sunucuya kaydedildi: ' + data.image_filename;
+            } else {
+                imageSavedNote.textContent = '⚠️ Görsel indirilemedi, manuel eklemeniz gerekebilir';
+                imageSavedNote.style.color = '#fbbf24';
+            }
+            
+            document.getElementById('ai-result').classList.add('show');
+        } else {
+            alert('Hata: ' + data.message);
+        }
+    } catch (error) {
+        alert('Bir hata oluştu: ' + error.message);
+    }
+    
+    btn.disabled = false;
+    btn.innerHTML = '✨ AI ile Oluştur';
+}
+
+function applyAIResult() {
+    if (!aiResultData) return;
+    
+    // Ürün ismi
+    const nameField = document.getElementById('id_name');
+    if (nameField) {
+        nameField.value = aiResultData.product_name;
+    }
+    
+    // Açıklama
+    const descField = document.getElementById('id_description');
+    if (descField) {
+        descField.value = aiResultData.description;
+    }
+    
+    // Fiyat
+    const priceField = document.getElementById('id_price');
+    if (priceField) {
+        priceField.value = aiResultData.suggested_price;
+    }
+    
+    // Kategori seçimi
+    const aiCategorySelect = document.getElementById('ai-category');
+    const selectedOption = aiCategorySelect.options[aiCategorySelect.selectedIndex];
+    const categoryId = selectedOption.getAttribute('data-id');
+    
+    if (categoryId) {
+        const categoryField = document.getElementById('id_category');
+        if (categoryField) {
+            categoryField.value = categoryId;
+        }
+    }
+    
+    // Görsel bilgisi
+    let imageMessage = '';
+    if (aiResultData.saved_image_path) {
+        imageMessage = '\n\n📷 Görsel sunucuya kaydedildi: ' + aiResultData.image_filename + 
+                       '\nÜrün resimlerinden bu dosyayı seçebilirsiniz.';
+    } else {
+        imageMessage = '\n\n⚠️ Görsel için "Ürün resimleri" bölümünden manuel eklemeniz gerekiyor.';
+    }
+    
+    alert('✅ AI önerileri forma uygulandı!' + imageMessage + '\n\nKontrol edip kaydet butonuna basın.');
+}
+</script>
+
+{{ block.super }}
+{% endblock %}

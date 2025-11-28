@@ -1,0 +1,15 @@
+[Unit]
+Description=E-Ticaret Django Backend Server
+After=network.target
+
+[Service]
+Type=simple
+User=xserio
+WorkingDirectory=/home/xserio/e_ticaret_projesi/backend
+Environment="PATH=/home/xserio/e_ticaret_projesi/backend/venv/bin:/usr/bin"
+ExecStart=/home/xserio/e_ticaret_projesi/backend/venv/bin/python manage.py runserver 0.0.0.0:8000
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

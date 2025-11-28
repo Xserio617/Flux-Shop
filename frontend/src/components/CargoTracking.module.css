@@ -1,0 +1,103 @@
+/* frontend/src/components/CargoTracking.module.css */
+
+.container {
+    padding: 40px 10%;
+    min-height: 80vh;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.searchBox {
+    background-color: var(--surface-color);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 40px;
+}
+
+.inputGroup {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    outline: none;
+}
+
+/* --- ZAMAN ÇİZELGESİ (TIMELINE) --- */
+.timeline {
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    padding-left: 20px;
+}
+
+.step {
+    display: flex;
+    gap: 20px;
+    padding-bottom: 40px;
+    position: relative;
+}
+
+/* Dikey Çizgi */
+.step::before {
+    content: '';
+    position: absolute;
+    left: 15px; /* Yuvarlağın ortası */
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background-color: var(--border-color);
+    z-index: 0;
+}
+
+.step:last-child::before {
+    display: none; /* Son adımda çizgi olmasın */
+}
+
+/* Yuvarlak İkon */
+.icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--border-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    z-index: 1;
+    transition: all 0.5s ease;
+}
+
+/* Aktif Adım Stili (Yeşil/Mor) */
+.active .icon {
+    background-color: var(--primary-color);
+    box-shadow: 0 0 10px var(--primary-color);
+}
+
+/* Tamamlanmış Çizgi */
+.active::before {
+    background-color: var(--primary-color);
+}
+
+.content h4 {
+    margin: 0 0 5px;
+    color: var(--text-color);
+}
+
+.content p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-light);
+}

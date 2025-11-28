@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Veritabanı
+  db:
+    image: postgres:16-alpine
+    container_name: eticaret_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: eticaret_db
+      POSTGRES_USER: eticaret_user
+      POSTGRES_PASSWORD: eticaret_secure_password_123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eticaret_user -d eticaret_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eticaret_backend
+    restart: unless-stopped
+    environment:
+      - DEBUG=False
+      - DATABASE_HOST=db
+      - DATABASE_NAME=eticaret_db
+      - DATABASE_USER=eticaret_user
+      - DATABASE_PASSWORD=eticaret_secure_password_123
+      - DJANGO_SETTINGS_MODULE=config.settings
+    volumes:
+      - backend_static:/app/staticfiles
+      - ./backend/media_files:/app/media_files
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn --bind 0.0.0.0:8000 --workers 3 config.wsgi:application"
+
+  # React Frontend (sadece build için)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: eticaret_frontend_builder
+    volumes:
+      - frontend_dist:/app/dist
+
+  # Nginx - Ana web sunucusu
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: eticaret_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - frontend_dist:/app/frontend/dist:ro
+      - backend_static:/app/backend/staticfiles:ro
+      - ./backend/media_files:/app/backend/media_files:ro
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  postgres_data:
+  backend_static:
+  frontend_dist:

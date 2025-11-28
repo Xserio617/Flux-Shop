@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* --- GÜNDÜZ MODU (Light) --- */
+  --primary-color: #6C63FF;
+  --primary-hover: #5a52d5;
+  --secondary-color: #2F2E41; 
+  --accent-color: #FF6584;
+  
+  --background-color: #F9FAFB; /* Açık Gri Zemin */
+  --surface-color: #FFFFFF;    /* Beyaz (Navbar ve Kartlar) */
+  --text-color: #374151;       /* Koyu Gri Metin */
+  --text-light: #6B7280;
+  --border-color: #e5e7eb;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* --- GECE MODU (Dark) --- */
+[data-theme="dark"] {
+  --primary-color: #8E86FF; 
+  --primary-hover: #6C63FF;
+  --secondary-color: #FFFFFF; /* Başlıklar Beyaz */
+  
+  --background-color: #121212; /* Zemin Siyah */
+  --surface-color: #1E1E1E;    /* Navbar Koyu Gri (Siyahın üstünde belli olsun) */
+  --text-color: #E5E7EB;       /* Metinler Beyaz */
+  --text-light: #9CA3AF;
+  --border-color: #333333;     /* Çizgiler silik */
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.8);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  /* Renk değişimi animasyonlu olsun */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a { text-decoration: none; color: inherit; transition: color 0.2s; }
+button { cursor: pointer; font-family: inherit; }
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* frontend/src/index.css EN ALTA EKLE */
+
+/* --- Fade In Up Animasyonu --- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px); /* Hafif aşağıdan başla */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0); /* Yerine otur */
+  }
+}
+
+/* Bu sınıfı hangi elemana verirsek o animasyonla gelir */
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+
+
+/* frontend/src/index.css EN ALTI */
+
+/* --- YUMUŞAK GİRİŞ ANİMASYONU (0.5s) --- */
+@keyframes smoothEntry {
+  0% {
+    opacity: 0;
+    transform: translateY(10px); /* Hafif aşağıdan */
+    filter: blur(5px); /* Hafif bulanık başla */
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0); /* Netleş */
+  }
+}
+
+/* Bu sınıfı ürünlere vereceğiz */
+.animate-entry {
+  animation: smoothEntry 0.5s ease-out forwards;
+}
+
+/* Skeleton için de hafif bir nabız efekti (Zaten varsa kalsın) */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.skeleton-wrapper {
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* frontend/src/index.css - EN ALTA EKLE */
+
+/* --- MODAL ANİMASYONLARI --- */
+
+/* 1. Arka Planın (Siyah Perde) Gelişi */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-overlay {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* 2. Kutunun Gelişi (Hafif alttan ve büyüyerek) */
+@keyframes modalPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px); /* Küçük ve aşağıda başla */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0); /* Normal boyuta ve yerine gel */
+  }
+}
+
+.animate-modal {
+  animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; /* Hafif yaylanma efekti */
+}
+
+
+
+
+

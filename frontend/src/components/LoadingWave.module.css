@@ -1,0 +1,36 @@
+/* frontend/src/components/LoadingWave.module.css */
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px; /* Yükseklik ayarı */
+  gap: 6px; /* Çubuklar arası boşluk */
+}
+
+.bar {
+  width: 8px;
+  height: 60px;
+  background-color: var(--primary-color); /* Senin Mor rengin */
+  border-radius: 99px;
+  animation: wave 1s ease-in-out infinite;
+}
+
+/* Hareket Animasyonu (Uzayıp Kısalma) */
+@keyframes wave {
+  0%, 100% {
+    height: 20px;
+    opacity: 0.5;
+  }
+  50% {
+    height: 80px;
+    opacity: 1;
+  }
+}
+
+/* Her çubuğa gecikme veriyoruz ki dalga gibi dursun */
+.bar:nth-child(1) { animation-delay: 0.0s; }
+.bar:nth-child(2) { animation-delay: 0.1s; }
+.bar:nth-child(3) { animation-delay: 0.2s; }
+.bar:nth-child(4) { animation-delay: 0.3s; }
+.bar:nth-child(5) { animation-delay: 0.4s; }

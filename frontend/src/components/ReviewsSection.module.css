@@ -1,0 +1,59 @@
+/* frontend/src/components/ReviewsSection.module.css */
+
+.reviewsSection {
+    margin-top: 40px;
+    padding: 30px;
+    background-color: var(--surface-color); /* KART RENGİ (Gece/Gündüz Uyumlu) */
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.heading {
+    color: var(--secondary-color);
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+
+.reviewItem {
+    border-bottom: 1px solid var(--border-color);
+    padding: 15px 0;
+}
+
+.reviewItem:last-child {
+    border-bottom: none;
+}
+
+.userMeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.userName {
+    color: var(--primary-color); /* İsimler mor olsun */
+    font-weight: 600;
+}
+
+.reviewForm {
+    background-color: var(--background-color); /* İç kısım biraz daha koyu */
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin-top: 25px;
+}
+
+.formInput {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--surface-color); 
+    color: var(--text-color);
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.2s;
+}

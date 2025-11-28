@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker
+Dockerfile

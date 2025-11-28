@@ -1,0 +1,78 @@
+# ================================================
+# E-TİCARET PROJESİ - KOMUTLAR
+# ================================================
+
+# ==================== MEVCUT ÇALIŞMA (NGINX + SYSTEMD) ====================
+# Bu yöntem şu an aktif ve çalışıyor!
+
+# Frontend build (production için)
+cd ~/e_ticaret_projesi/frontend
+npm run build
+
+# Backend başlat
+cd ~/e_ticaret_projesi/backend
+source venv/bin/activate
+python3 manage.py runserver 0.0.0.0:8000
+
+# Nginx yeniden başlat
+sudo systemctl restart nginx
+
+# Ngrok başlat (port 80 üzerinden)
+ngrok http 80 --domain=literalistically-unstaved-aaliyah.ngrok-free.dev
+
+# ==================== DOCKER COMPOSE (PAKETLEME) ====================
+# Bu yöntem paketleme ve dağıtım içindir
+
+# ÖNEMLİ: Frontend build yerel yapılır (hızlı!)
+cd ~/e_ticaret_projesi/frontend && npm run build
+
+# Image'ları build et (ilk seferde)
+docker-compose build
+
+# Servisleri başlat (anında açılır)
+docker-compose up -d
+
+# Logları izle
+docker-compose logs -f
+
+# Sadece backend loglarını izle
+docker-compose logs -f backend
+
+# Servisleri durdur
+docker-compose down
+
+# Servisleri durdur ve volume'ları sil (DİKKAT: Veritabanı silinir!)
+docker-compose down -v
+
+# Backend container'ına bağlan
+docker-compose exec backend bash
+
+# Django migration yap
+docker-compose exec backend python manage.py migrate
+
+# Django superuser oluştur
+docker-compose exec backend python manage.py createsuperuser
+
+# -------------------- DOCKER BUILD --------------------
+# Image'ları yeniden oluştur
+docker-compose build --no-cache
+
+# Kullanılmayan Docker kaynaklarını temizle
+docker system prune -a
+
+# Container durumlarını kontrol et
+docker-compose ps
+
+# -------------------- YEREL GELİŞTİRME --------------------
+# Frontend (development)
+cd frontend
+npm run dev
+
+# Backend (development)
+cd ~/e_ticaret_projesi/backend
+source venv/bin/activate
+python3 manage.py runserver 0.0.0.0:8000
+
+# -------------------- DİĞER --------------------
+# reCAPTCHA Key
+# 6LeKNBgsAAAAAG-P9vA_YrH7Z7mua2Xm-W-A-NTJ

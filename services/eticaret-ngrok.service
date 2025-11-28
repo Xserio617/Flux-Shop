@@ -1,0 +1,13 @@
+[Unit]
+Description=E-Ticaret Ngrok Tunnels (Frontend + Backend)
+After=network.target eticaret-frontend.service eticaret-backend.service
+
+[Service]
+Type=simple
+User=xserio
+ExecStart=/snap/bin/ngrok start --all --config /home/xserio/snap/ngrok/325/.config/ngrok/ngrok.yml
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
