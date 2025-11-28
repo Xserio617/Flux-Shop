@@ -11,7 +11,7 @@ export default function QuickViewModal({ product, isOpen, onClose }) {
 
   const getImageUrl = (url) => {
     if (!url) return '';
-    return url.replace('http://192.168.2.104:8000', ''); 
+    return url.replace('http://10.127.47.123:8000', ''); 
   };
 
   // Fiyat Hesaplama

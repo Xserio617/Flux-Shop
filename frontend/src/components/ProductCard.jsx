@@ -23,7 +23,7 @@ export default function ProductCard({ product }) {
       setIsModalOpen(true); 
   }
 
-  const imageUrl = product.image ? product.image.replace('http://192.168.2.104:8000', '') : '';
+  const imageUrl = product.image ? product.image.replace('http://10.127.47.123:8000', '') : '';
 
   const { originalPrice, finalPrice, hasDiscount } = calculateDiscount(product);
 

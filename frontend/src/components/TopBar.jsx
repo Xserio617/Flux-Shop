@@ -12,7 +12,7 @@ export default function TopBar() {
     const getImageUrl = (url) => {
         if (!url) return '';
         // Güvensiz IP'yi söküyoruz
-        return url.replace('http://192.168.2.104:8000', ''); 
+        return url.replace('http://10.127.47.123:8000', ''); 
     };
 
     useEffect(() => {
