@@ -2,6 +2,95 @@
 # E-TİCARET PROJESİ - KOMUTLAR
 # ================================================
 
+# ==================== GIT KOMUTLARI ====================
+# Değişiklikleri kontrol et
+git status
+
+# Tüm değişiklikleri stage'e ekle
+git add .
+
+# Commit yap
+git commit -m "Açıklama mesajı"
+
+# GitHub'a gönder
+git push origin main
+
+# Hepsini tek satırda yap (hızlı push)
+git add . && git commit -m "Güncelleme" && git push origin main
+
+# Son commit'i geri al (local)
+git reset --soft HEAD~1
+
+# Uzak repodan çek
+git pull origin main
+
+# ==================== API ENDPOINT'LER ====================
+
+# --- KULLANICI (Auth Gerekli: Bearer Token) ---
+# POST   /api/users/register/              → Kayıt ol
+# POST   /api/token/                       → Login (JWT al)
+# POST   /api/token/refresh/               → Token yenile
+# GET    /api/users/me/                    → Profil bilgileri
+# PUT    /api/users/change-password/       → Parola değiştir
+# PUT    /api/users/change-username/       → Kullanıcı adı değiştir
+# POST   /api/users/google-login/          → Google ile giriş
+
+# --- ADRESLERİM (Auth Gerekli) ---
+# GET    /api/users/addresses/             → Adres listesi
+# POST   /api/users/addresses/             → Yeni adres ekle
+# GET    /api/users/addresses/<id>/        → Adres detayı
+# PUT    /api/users/addresses/<id>/        → Adres güncelle
+# DELETE /api/users/addresses/<id>/        → Adres sil
+# POST   /api/users/addresses/<id>/set-default/ → Varsayılan yap
+
+# --- ÜRÜNLER (Public) ---
+# GET    /api/products/                    → Ürün listesi
+# GET    /api/products/<id>/               → Ürün detayı
+# GET    /api/categories/                  → Kategori listesi
+# GET    /api/campaigns/                   → Kampanya bannerları
+# GET    /api/promo-banners/               → Reklam bannerları
+# GET    /api/site-config/                 → Site ayarları
+
+# --- FAVORİLER (Auth Gerekli) ---
+# GET    /api/favorites/                   → Favori listesi
+# POST   /api/favorites/toggle/            → Favori ekle/çıkar
+
+# --- YORUMLAR ---
+# GET    /api/reviews/<product_id>/        → Ürün yorumları
+# POST   /api/reviews/                     → Yorum ekle (Auth)
+
+# --- SİPARİŞLER (Auth Gerekli) ---
+# GET    /api/orders/                      → Sipariş listesi
+# POST   /api/orders/                      → Sipariş oluştur
+# GET    /api/orders/<order_number>/       → Sipariş detayı
+
+# --- KUPONLAR ---
+# POST   /api/coupons/validate/            → Kupon doğrula
+
+# --- DİĞER ---
+# POST   /api/bug-reports/                 → Bug bildir
+# POST   /api/track-behavior/              → Davranış takibi
+
+# ==================== FRONTEND ROUTE'LAR ====================
+# /                    → Ana sayfa
+# /login               → Giriş/Kayıt
+# /profile             → Profil
+# /addresses           → Adreslerim ⭐ YENİ
+# /favorites           → Favorilerim
+# /orders              → Siparişlerim
+# /cart                → Sepet
+# /checkout            → Ödeme
+# /success             → Sipariş başarılı
+# /product/<id>        → Ürün detay
+# /search?q=           → Arama sonuçları
+# /kargo-takip         → Kargo takip
+# /sss                 → SSS
+# /hakkimizda          → Hakkımızda
+# /iletisim            → İletişim
+# /gizlilik            → Gizlilik
+# /iade                → İade politikası
+# /kariyer             → Kariyer
+
 # ==================== MEVCUT ÇALIŞMA (NGINX + SYSTEMD) ====================
 # Bu yöntem şu an aktif ve çalışıyor!
 

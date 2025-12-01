@@ -2,8 +2,8 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import CustomUserRegisterSerializer, UserSerializer, ChangePasswordSerializer, ChangeUsernameSerializer
-from .models import CustomUser
+from .serializers import CustomUserRegisterSerializer, UserSerializer, ChangePasswordSerializer, ChangeUsernameSerializer, UserAddressSerializer
+from .models import CustomUser, UserAddress
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from django.conf import settings
@@ -135,3 +135,61 @@ class ChangeUsernameView(generics.UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"message": "Kullanıcı adı başarıyla değiştirildi.", "username": request.user.username}, status=status.HTTP_200_OK)        
+
+
+# 5. KULLANICI ADRESLERİ VİEW (CRUD İşlemleri)
+class UserAddressListCreateView(generics.ListCreateAPIView):
+    """Kullanıcının adreslerini listele ve yeni adres ekle"""
+    serializer_class = UserAddressSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return UserAddress.objects.filter(user=self.request.user)
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response({
+            "message": "Adres başarıyla eklendi.",
+            "address": serializer.data
+        }, status=status.HTTP_201_CREATED)
+
+
+class UserAddressDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Tek bir adresi görüntüle, güncelle veya sil"""
+    serializer_class = UserAddressSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return UserAddress.objects.filter(user=self.request.user)
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response({
+            "message": "Adres başarıyla güncellendi.",
+            "address": serializer.data
+        })
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({"message": "Adres başarıyla silindi."}, status=status.HTTP_200_OK)
+
+
+class SetDefaultAddressView(APIView):
+    """Bir adresi varsayılan olarak ayarla"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, pk):
+        try:
+            address = UserAddress.objects.get(pk=pk, user=request.user)
+            address.is_default = True
+            address.save()
+            return Response({"message": "Varsayılan adres güncellendi."}, status=status.HTTP_200_OK)
+        except UserAddress.DoesNotExist:
+            return Response({"error": "Adres bulunamadı."}, status=status.HTTP_404_NOT_FOUND)        

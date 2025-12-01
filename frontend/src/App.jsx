@@ -10,6 +10,7 @@ import OrderSuccess from "./components/OrderSuccess";
 import AuthPage from "./components/AuthPage";
 import FavoritesPage from "./components/FavoritesPage";
 import ProfilePage from "./components/ProfilePage";
+import AddressesPage from "./components/AddressesPage";
 import SearchResultsPage from "./components/SearchResultsPage";
 import CargoTrackingPage from "./components/CargoTrackingPage";
 import FAQPage from "./components/FAQPage";
@@ -71,6 +72,7 @@ function App() {
           {/* --- KULLANICI --- */}
           <Route path="/login" element={<AuthPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/addresses" element={<AddressesPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
 
           {/* --- ALIŞVERİŞ --- */}

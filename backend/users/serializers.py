@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser
+from .models import CustomUser, UserAddress
 from django.contrib.auth.password_validation import validate_password
 
 # 1. KAYIT OLMA SERIALIZER (Register)
@@ -76,3 +76,33 @@ class ChangeUsernameSerializer(serializers.Serializer):
         user.username = self.validated_data['new_username']
         user.save()
         return user
+
+
+# 5. KULLANICI ADRESİ SERIALIZER
+class UserAddressSerializer(serializers.ModelSerializer):
+    full_address = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = UserAddress
+        fields = [
+            'id', 'title', 'full_name', 'phone', 'city', 'district', 
+            'neighborhood', 'address_line', 'postal_code', 'is_default',
+            'full_address', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'full_address']
+    
+    def get_full_address(self, obj):
+        return obj.get_full_address()
+    
+    def create(self, validated_data):
+        # Kullanıcıyı otomatik olarak ekle
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+    
+    def validate(self, data):
+        # Kullanıcının maksimum 10 adresi olabilir
+        user = self.context['request'].user
+        if self.instance is None:  # Yeni adres ekleniyor
+            if user.addresses.count() >= 10:
+                raise serializers.ValidationError("En fazla 10 adres ekleyebilirsiniz.")
+        return data

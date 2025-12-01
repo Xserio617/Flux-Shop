@@ -185,6 +185,21 @@ export default function ProfilePage() {
                         🔒 Güvenlik
                     </li>
                     <li 
+                        onClick={() => navigate('/addresses')}
+                        style={{ 
+                          marginBottom: '15px', 
+                          fontWeight: 'normal', 
+                          color: 'var(--text-color)', 
+                          cursor: 'pointer',
+                          padding: '10px',
+                          borderRadius: '8px',
+                          backgroundColor: 'transparent',
+                          transition: 'all 0.2s ease'
+                        }}
+                    >
+                        📍 Adreslerim
+                    </li>
+                    <li 
                         onClick={() => navigate('/orders')}
                         style={{ 
                           marginBottom: '15px', 
