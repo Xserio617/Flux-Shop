@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import styles from './AddressesPage.module.css';
 
 export default function AddressesPage() {
   const [addresses, setAddresses] = useState([]);
@@ -86,13 +87,11 @@ export default function AddressesPage() {
       const token = localStorage.getItem('accessToken');
       
       if (editingAddress) {
-        // Güncelleme
         await axios.put(`/api/users/addresses/${editingAddress.id}/`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         toast.success('Adres güncellendi! ✅');
       } else {
-        // Yeni ekle
         await axios.post('/api/users/addresses/', formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -126,6 +125,8 @@ export default function AddressesPage() {
       is_default: address.is_default
     });
     setShowForm(true);
+    // Mobilde form'a scroll
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Adres silme
@@ -169,82 +170,38 @@ export default function AddressesPage() {
   };
 
   if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '100px', color: 'var(--text-color)' }}>
-        Adresler Yükleniyor...
-      </div>
-    );
+    return <div className={styles.loading}>Adresler Yükleniyor...</div>;
   }
 
   return (
-    <div style={{ 
-      padding: '40px 10%', 
-      minHeight: '80vh', 
-      backgroundColor: 'var(--background-color)', 
-      color: 'var(--text-color)' 
-    }}>
+    <div className={styles.container}>
       
       {/* Başlık ve Geri Butonu */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '30px' }}>
-        <button 
-          onClick={() => navigate('/profile')}
-          style={{
-            backgroundColor: 'var(--surface-color)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '8px',
-            padding: '10px 15px',
-            cursor: 'pointer',
-            color: 'var(--text-color)',
-            fontSize: '16px'
-          }}
-        >
+      <div className={styles.header}>
+        <button onClick={() => navigate('/profile')} className={styles.backButton}>
           ← Geri
         </button>
-        <h1 style={{ margin: 0, color: 'var(--secondary-color)' }}>📍 Adreslerim</h1>
+        <h1 className={styles.title}>📍 Adreslerim</h1>
       </div>
 
       {/* Yeni Adres Ekle Butonu */}
       {!showForm && (
-        <button
-          onClick={() => setShowForm(true)}
-          style={{
-            backgroundColor: 'var(--primary-color)',
-            color: 'white',
-            padding: '15px 30px',
-            borderRadius: '10px',
-            border: 'none',
-            fontWeight: '600',
-            cursor: 'pointer',
-            marginBottom: '30px',
-            fontSize: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px'
-          }}
-        >
+        <button onClick={() => setShowForm(true)} className={styles.addButton}>
           ➕ Yeni Adres Ekle
         </button>
       )}
 
       {/* Adres Formu */}
       {showForm && (
-        <div style={{
-          backgroundColor: 'var(--surface-color)',
-          borderRadius: '15px',
-          padding: '30px',
-          marginBottom: '30px',
-          border: '1px solid var(--border-color)'
-        }}>
-          <h2 style={{ marginTop: 0, marginBottom: '25px' }}>
+        <div className={styles.formContainer}>
+          <h2 className={styles.formTitle}>
             {editingAddress ? '✏️ Adresi Düzenle' : '🏠 Yeni Adres Ekle'}
           </h2>
           
           <form onSubmit={handleSubmit}>
             {/* Adres Başlığı */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                Adres Başlığı *
-              </label>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Adres Başlığı *</label>
               <input
                 type="text"
                 name="title"
@@ -252,24 +209,14 @@ export default function AddressesPage() {
                 onChange={handleInputChange}
                 placeholder="Örn: Evim, Okulum, İş Yerim"
                 required
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-color)',
-                  backgroundColor: 'var(--background-color)',
-                  color: 'var(--text-color)',
-                  fontSize: '14px'
-                }}
+                className={styles.input}
               />
             </div>
 
             {/* Ad Soyad ve Telefon */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+            <div className={styles.twoColumnGrid}>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                  Alıcı Adı Soyadı *
-                </label>
+                <label className={styles.label}>Alıcı Adı Soyadı *</label>
                 <input
                   type="text"
                   name="full_name"
@@ -277,21 +224,11 @@ export default function AddressesPage() {
                   onChange={handleInputChange}
                   placeholder="Ad Soyad"
                   required
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--background-color)',
-                    color: 'var(--text-color)',
-                    fontSize: '14px'
-                  }}
+                  className={styles.input}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                  Telefon *
-                </label>
+                <label className={styles.label}>Telefon *</label>
                 <input
                   type="tel"
                   name="phone"
@@ -299,25 +236,15 @@ export default function AddressesPage() {
                   onChange={handleInputChange}
                   placeholder="05XX XXX XX XX"
                   required
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--background-color)',
-                    color: 'var(--text-color)',
-                    fontSize: '14px'
-                  }}
+                  className={styles.input}
                 />
               </div>
             </div>
 
             {/* İl, İlçe, Mahalle */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+            <div className={styles.threeColumnGrid}>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                  İl *
-                </label>
+                <label className={styles.label}>İl *</label>
                 <input
                   type="text"
                   name="city"
@@ -325,21 +252,11 @@ export default function AddressesPage() {
                   onChange={handleInputChange}
                   placeholder="İstanbul"
                   required
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--background-color)',
-                    color: 'var(--text-color)',
-                    fontSize: '14px'
-                  }}
+                  className={styles.input}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                  İlçe *
-                </label>
+                <label className={styles.label}>İlçe *</label>
                 <input
                   type="text"
                   name="district"
@@ -347,45 +264,25 @@ export default function AddressesPage() {
                   onChange={handleInputChange}
                   placeholder="Beşiktaş"
                   required
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--background-color)',
-                    color: 'var(--text-color)',
-                    fontSize: '14px'
-                  }}
+                  className={styles.input}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                  Mahalle
-                </label>
+                <label className={styles.label}>Mahalle</label>
                 <input
                   type="text"
                   name="neighborhood"
                   value={formData.neighborhood}
                   onChange={handleInputChange}
                   placeholder="Levent Mah."
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--background-color)',
-                    color: 'var(--text-color)',
-                    fontSize: '14px'
-                  }}
+                  className={styles.input}
                 />
               </div>
             </div>
 
             {/* Açık Adres */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                Açık Adres *
-              </label>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Açık Adres *</label>
               <textarea
                 name="address_line"
                 value={formData.address_line}
@@ -393,87 +290,41 @@ export default function AddressesPage() {
                 placeholder="Sokak, bina no, daire no vb."
                 required
                 rows={3}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-color)',
-                  backgroundColor: 'var(--background-color)',
-                  color: 'var(--text-color)',
-                  fontSize: '14px',
-                  resize: 'vertical'
-                }}
+                className={styles.textarea}
               />
             </div>
 
             {/* Posta Kodu ve Varsayılan */}
-            <div style={{ display: 'flex', gap: '30px', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap' }}>
+            <div className={styles.flexRow}>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                  Posta Kodu
-                </label>
+                <label className={styles.label}>Posta Kodu</label>
                 <input
                   type="text"
                   name="postal_code"
                   value={formData.postal_code}
                   onChange={handleInputChange}
                   placeholder="34XXX"
-                  style={{
-                    width: '150px',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--background-color)',
-                    color: 'var(--text-color)',
-                    fontSize: '14px'
-                  }}
+                  className={styles.postalInput}
                 />
               </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginTop: '25px' }}>
+              <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
                   name="is_default"
                   checked={formData.is_default}
                   onChange={handleInputChange}
-                  style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                  className={styles.checkbox}
                 />
                 <span>Varsayılan adres olarak ayarla ⭐</span>
               </label>
             </div>
 
             {/* Butonlar */}
-            <div style={{ display: 'flex', gap: '15px' }}>
-              <button
-                type="submit"
-                disabled={formLoading}
-                style={{
-                  backgroundColor: 'var(--primary-color)',
-                  color: 'white',
-                  padding: '12px 30px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  fontWeight: '600',
-                  cursor: formLoading ? 'not-allowed' : 'pointer',
-                  opacity: formLoading ? 0.7 : 1,
-                  fontSize: '16px'
-                }}
-              >
+            <div className={styles.buttonGroup}>
+              <button type="submit" disabled={formLoading} className={styles.submitButton}>
                 {formLoading ? 'Kaydediliyor...' : (editingAddress ? 'Güncelle' : 'Kaydet')}
               </button>
-              <button
-                type="button"
-                onClick={resetForm}
-                style={{
-                  backgroundColor: 'transparent',
-                  color: 'var(--text-color)',
-                  padding: '12px 30px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-color)',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  fontSize: '16px'
-                }}
-              >
+              <button type="button" onClick={resetForm} className={styles.cancelButton}>
                 İptal
               </button>
             </div>
@@ -483,124 +334,57 @@ export default function AddressesPage() {
 
       {/* Adres Listesi */}
       {addresses.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '60px',
-          backgroundColor: 'var(--surface-color)',
-          borderRadius: '15px',
-          border: '1px solid var(--border-color)'
-        }}>
-          <div style={{ fontSize: '60px', marginBottom: '20px' }}>📭</div>
-          <h2 style={{ marginBottom: '10px' }}>Henüz adres eklemediniz</h2>
-          <p style={{ color: 'var(--text-light)' }}>
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>📭</div>
+          <h2 className={styles.emptyTitle}>Henüz adres eklemediniz</h2>
+          <p className={styles.emptyText}>
             Evim, Okulum, İş Yerim gibi adreslerinizi kaydedin, siparişte hızlıca seçin!
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+        <div className={styles.addressGrid}>
           {addresses.map(address => (
             <div
               key={address.id}
-              style={{
-                backgroundColor: 'var(--surface-color)',
-                borderRadius: '15px',
-                padding: '25px',
-                border: address.is_default 
-                  ? '2px solid var(--primary-color)' 
-                  : '1px solid var(--border-color)',
-                position: 'relative'
-              }}
+              className={`${styles.addressCard} ${address.is_default ? styles.addressCardDefault : ''}`}
             >
               {/* Varsayılan Badge */}
               {address.is_default && (
-                <div style={{
-                  position: 'absolute',
-                  top: '-10px',
-                  right: '15px',
-                  backgroundColor: 'var(--primary-color)',
-                  color: 'white',
-                  padding: '5px 15px',
-                  borderRadius: '20px',
-                  fontSize: '12px',
-                  fontWeight: '600'
-                }}>
-                  ⭐ Varsayılan
-                </div>
+                <div className={styles.defaultBadge}>⭐ Varsayılan</div>
               )}
 
               {/* Başlık */}
-              <h3 style={{ 
-                margin: '0 0 15px 0', 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '10px',
-                fontSize: '18px'
-              }}>
-                <span style={{ fontSize: '24px' }}>{getTitleIcon(address.title)}</span>
+              <h3 className={styles.addressTitle}>
+                <span className={styles.addressIcon}>{getTitleIcon(address.title)}</span>
                 {address.title}
               </h3>
 
               {/* Bilgiler */}
-              <div style={{ marginBottom: '15px', lineHeight: '1.7' }}>
-                <div style={{ fontWeight: '500' }}>{address.full_name}</div>
-                <div style={{ color: 'var(--text-light)' }}>{address.phone}</div>
-                <div style={{ marginTop: '10px', color: 'var(--text-light)' }}>
-                  {address.full_address}
-                </div>
+              <div className={styles.addressInfo}>
+                <div className={styles.addressName}>{address.full_name}</div>
+                <div className={styles.addressPhone}>{address.phone}</div>
+                <div className={styles.addressFull}>{address.full_address}</div>
               </div>
 
               {/* Aksiyonlar */}
-              <div style={{ 
-                display: 'flex', 
-                gap: '10px', 
-                borderTop: '1px solid var(--border-color)', 
-                paddingTop: '15px',
-                flexWrap: 'wrap'
-              }}>
+              <div className={styles.actionButtons}>
                 <button
                   onClick={() => handleEdit(address)}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: '1px solid var(--primary-color)',
-                    color: 'var(--primary-color)',
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    fontSize: '13px'
-                  }}
+                  className={`${styles.actionButton} ${styles.editButton}`}
                 >
                   ✏️ Düzenle
                 </button>
                 {!address.is_default && (
                   <button
                     onClick={() => handleSetDefault(address.id)}
-                    style={{
-                      backgroundColor: 'transparent',
-                      border: '1px solid var(--border-color)',
-                      color: 'var(--text-color)',
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontWeight: '500',
-                      fontSize: '13px'
-                    }}
+                    className={`${styles.actionButton} ${styles.defaultButton}`}
                   >
-                    ⭐ Varsayılan Yap
+                    ⭐ Varsayılan
                   </button>
                 )}
                 <button
                   onClick={() => handleDelete(address.id)}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: '1px solid #ef4444',
-                    color: '#ef4444',
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    fontSize: '13px'
-                  }}
+                  className={`${styles.actionButton} ${styles.deleteButton}`}
                 >
                   🗑️ Sil
                 </button>

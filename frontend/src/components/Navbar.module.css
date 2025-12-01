@@ -16,6 +16,7 @@
     backdrop-filter: blur(10px); /* Buzlu cam efekti */
     
     transition: background-color 0.3s ease, border-color 0.3s ease;
+    gap: 15px;
 }
 
 .logo {
@@ -23,11 +24,13 @@
        ama metin olsaydı var(--text-color) olurdu. */
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .searchContainer {
     display: flex;
-    width: 40%;
+    flex: 1;
+    max-width: 500px;
     box-shadow: var(--shadow-sm);
     border-radius: 12px;
     overflow: hidden;
@@ -58,6 +61,8 @@
     padding: 0 25px;
     font-weight: 600;
     transition: background-color 0.2s;
+    cursor: pointer;
+    flex-shrink: 0;
 }
 
 .searchBtn:hover {
@@ -66,8 +71,9 @@
 
 .actions {
     display: flex;
-    gap: 20px;
+    gap: 15px;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .link {
@@ -95,6 +101,8 @@
     gap: 8px;
     font-weight: 600;
     transition: all 0.2s;
+    cursor: pointer;
+    white-space: nowrap;
 }
 
 .cartBtn:hover {
@@ -102,7 +110,9 @@
     color: var(--primary-color);
 }
 
-
+.cartBtnText {
+    display: inline;
+}
 
 .profileBtn {
     display: flex;
@@ -116,6 +126,7 @@
     background-color: var(--background-color);
     color: var(--text-color); /* Normalde metin rengi (Siyah/Beyaz) */
     transition: all 0.3s ease;
+    flex-shrink: 0;
 }
 
 /* Üzerine gelince (Hover) */
@@ -124,4 +135,117 @@
     color: var(--primary-color);        /* İkon Mor olsun */
     background-color: var(--surface-color);
     box-shadow: 0 2px 8px rgba(108, 99, 255, 0.2); /* Hafif mor gölge */
+}
+
+/* ==================== TABLET ==================== */
+@media (max-width: 900px) {
+    .nav {
+        padding: 12px 4%;
+        gap: 12px;
+    }
+    
+    .searchContainer {
+        max-width: 300px;
+    }
+    
+    .searchInput {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    .searchBtn {
+        padding: 0 15px;
+        font-size: 13px;
+    }
+    
+    .actions {
+        gap: 12px;
+    }
+    
+    .cartBtn {
+        padding: 8px 12px;
+    }
+    
+    .cartBtnText {
+        display: none;
+    }
+}
+
+/* ==================== MOBİL ==================== */
+@media (max-width: 600px) {
+    .nav {
+        flex-wrap: wrap;
+        padding: 10px 3%;
+        gap: 10px;
+    }
+    
+    .logo {
+        order: 1;
+    }
+    
+    .logo svg {
+        height: 30px !important;
+    }
+    
+    .actions {
+        order: 2;
+        gap: 8px;
+    }
+    
+    .searchContainer {
+        order: 3;
+        width: 100%;
+        max-width: 100%;
+        flex: none;
+    }
+    
+    .searchInput {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    .searchBtn {
+        padding: 0 15px;
+        font-size: 13px;
+    }
+    
+    .cartBtn {
+        padding: 8px 10px;
+        border-radius: 10px;
+        gap: 5px;
+    }
+    
+    .cartBtnText {
+        display: none;
+    }
+    
+    .profileBtn {
+        width: 36px;
+        height: 36px;
+        padding: 6px;
+    }
+    
+    .link {
+        font-size: 13px;
+    }
+}
+
+/* ==================== ÇOK KÜÇÜK EKRANLAR ==================== */
+@media (max-width: 380px) {
+    .nav {
+        padding: 8px 2%;
+    }
+    
+    .actions {
+        gap: 6px;
+    }
+    
+    .cartBtn {
+        padding: 6px 8px;
+    }
+    
+    .profileBtn {
+        width: 32px;
+        height: 32px;
+    }
 }

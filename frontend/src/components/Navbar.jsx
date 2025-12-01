@@ -71,9 +71,9 @@ export default function Navbar() {
         <Link to="/cart" style={{ textDecoration: 'none' }}>
             <button className={styles.cartBtn}>
                 <CartIcon size={22} />
-                <span>Sepetim</span>
+                <span className={styles.cartBtnText}>Sepetim</span>
                 {totalItems > 0 && (
-                    <span style={{ backgroundColor: 'var(--primary-color)', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '11px', marginLeft: '5px', minWidth: '20px', textAlign: 'center', lineHeight: '1.2' }}>
+                    <span style={{ backgroundColor: 'var(--primary-color)', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '11px', marginLeft: '2px', minWidth: '18px', textAlign: 'center', lineHeight: '1.2' }}>
                         {totalItems}
                     </span>
                 )}
