@@ -122,6 +122,7 @@ REST_FRAMEWORK = {
 
 **Dosya:** `/home/xserio/e_ticaret_projesi/backend/users/views.py`
 
+
 ```python
 class LoginRateThrottle(AnonRateThrottle):
     rate = '5/minute'
