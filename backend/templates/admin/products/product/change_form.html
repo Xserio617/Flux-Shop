@@ -104,11 +104,6 @@
     .ai-apply-btn:hover {
         background: #16a34a;
     }
-    .ai-image-preview {
-        max-width: 200px;
-        border-radius: 8px;
-        margin-top: 10px;
-    }
     .loading-spinner {
         display: inline-block;
         width: 20px;
@@ -127,7 +122,7 @@
 {% block content %}
 <div class="ai-generator-box">
     <h3>🤖 AI Ürün Asistanı</h3>
-    <p>Sadece ürün ismini yazın, AI sizin için açıklama, fiyat ve görsel önersin!</p>
+    <p>Sadece ürün ismini yazın, AI sizin için açıklama ve fiyat önersin!</p>
     
     <div class="ai-input-group">
         <input type="text" id="ai-product-name" placeholder="Ürün ismini yazın... (örn: iPhone 15 Pro Max)">
@@ -155,11 +150,6 @@
         <div class="ai-result-item">
             <div class="ai-result-label">🏷️ Etiketler</div>
             <div class="ai-result-value" id="ai-tags"></div>
-        </div>
-        <div class="ai-result-item">
-            <div class="ai-result-label">🖼️ Önerilen Görsel</div>
-            <img id="ai-image" class="ai-image-preview" src="" alt="Önizleme">
-            <div id="ai-image-saved" style="font-size: 11px; margin-top: 5px; color: #22c55e;"></div>
         </div>
         <button type="button" class="ai-apply-btn" onclick="applyAIResult()">
             ✅ Forma Uygula
@@ -210,25 +200,11 @@ async function generateWithAI() {
                 akakceNote.textContent = '✅ Fiyat Akakçe.com piyasa verilerinden alındı';
                 akakceNote.style.color = '#22c55e';
             } else {
-                akakceNote.textContent = '⚠️ Akakçe\'de bulunamadı, AI tahmini fiyat';
+                akakceNote.textContent = '⚠️ Akakçe bulunamadı, AI tahmini fiyat';
                 akakceNote.style.color = '#fbbf24';
             }
             
             document.getElementById('ai-tags').textContent = data.suggested_tags.join(', ');
-            
-            // Görsel
-            if (data.suggested_image_url) {
-                document.getElementById('ai-image').src = data.suggested_image_url;
-            }
-            
-            // Görsel kaydetme durumu
-            const imageSavedNote = document.getElementById('ai-image-saved');
-            if (data.saved_image_path) {
-                imageSavedNote.textContent = '✅ Görsel sunucuya kaydedildi: ' + data.image_filename;
-            } else {
-                imageSavedNote.textContent = '⚠️ Görsel indirilemedi, manuel eklemeniz gerekebilir';
-                imageSavedNote.style.color = '#fbbf24';
-            }
             
             document.getElementById('ai-result').classList.add('show');
         } else {
@@ -275,16 +251,7 @@ function applyAIResult() {
         }
     }
     
-    // Görsel bilgisi
-    let imageMessage = '';
-    if (aiResultData.saved_image_path) {
-        imageMessage = '\n\n📷 Görsel sunucuya kaydedildi: ' + aiResultData.image_filename + 
-                       '\nÜrün resimlerinden bu dosyayı seçebilirsiniz.';
-    } else {
-        imageMessage = '\n\n⚠️ Görsel için "Ürün resimleri" bölümünden manuel eklemeniz gerekiyor.';
-    }
-    
-    alert('✅ AI önerileri forma uygulandı!' + imageMessage + '\n\nKontrol edip kaydet butonuna basın.');
+    alert('✅ AI önerileri forma uygulandı!\n\nKontrol edip kaydet butonuna basın.');
 }
 </script>
 

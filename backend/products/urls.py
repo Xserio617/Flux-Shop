@@ -20,7 +20,17 @@ from .views import (
     InstallmentView,
     UserBehaviorCreateView,
     RecommendationView,
-    AIProductGeneratorView
+    AIProductGeneratorView,
+    # PC Builder
+    ComponentTypeListView,
+    PCComponentListView,
+    PCComponentDetailView,
+    PCBuildListCreateView,
+    PCBuildDetailView,
+    AddComponentToBuildView,
+    RemoveComponentFromBuildView,
+    CompatibleComponentsView,
+    AddBuildToCartView,
 )
 
 router = DefaultRouter()
@@ -72,4 +82,26 @@ urlpatterns = [
     
     # AI Ürün Oluşturucu (Admin)
     path('ai/generate-product/', AIProductGeneratorView.as_view(), name='ai-generate-product'),
+    
+    # ============== PC BUILDER ==============
+    # Parça türleri (İşlemci, Anakart, RAM, vb.)
+    path('pc-builder/component-types/', ComponentTypeListView.as_view(), name='component-types'),
+    
+    # PC Parçaları
+    path('pc-builder/components/', PCComponentListView.as_view(), name='pc-components'),
+    path('pc-builder/components/<int:pk>/', PCComponentDetailView.as_view(), name='pc-component-detail'),
+    
+    # PC Yapılandırmaları (Build)
+    path('pc-builder/builds/', PCBuildListCreateView.as_view(), name='pc-builds'),
+    path('pc-builder/builds/<int:pk>/', PCBuildDetailView.as_view(), name='pc-build-detail'),
+    
+    # Build'e parça ekleme/kaldırma
+    path('pc-builder/builds/<int:build_id>/add-component/', AddComponentToBuildView.as_view(), name='add-component'),
+    path('pc-builder/builds/<int:build_id>/remove-component/<int:component_id>/', RemoveComponentFromBuildView.as_view(), name='remove-component'),
+    
+    # Uyumlu parçalar
+    path('pc-builder/builds/<int:build_id>/compatible/', CompatibleComponentsView.as_view(), name='compatible-components'),
+    
+    # Build'i sepete ekle
+    path('pc-builder/builds/<int:build_id>/add-to-cart/', AddBuildToCartView.as_view(), name='build-to-cart'),
 ]

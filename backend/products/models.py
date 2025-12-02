@@ -448,3 +448,147 @@ class UserBehavior(models.Model):
     def get_user_interests(cls, user, limit=10):
         """Kullanıcının en çok ilgilendiği ürünleri getir"""
         return cls.objects.filter(user=user).select_related('product', 'product__category')[:limit]
+
+
+# ============================================================
+# 13. PC BUILDER (BİLGİSAYAR TOPLAMA) MODELLERİ
+# ============================================================
+
+class ComponentType(models.Model):
+    """PC Parça Türleri (İşlemci, Anakart, RAM, vb.)"""
+    
+    name = models.CharField(max_length=100, verbose_name="Parça Türü Adı")
+    slug = models.SlugField(unique=True, verbose_name="URL Slug")
+    icon = models.CharField(max_length=50, blank=True, null=True, verbose_name="İkon (CSS class)")
+    order = models.IntegerField(default=0, verbose_name="Sıralama")
+    is_required = models.BooleanField(default=True, verbose_name="Zorunlu mu?")
+    
+    class Meta:
+        verbose_name = "Parça Türü"
+        verbose_name_plural = "Parça Türleri"
+        ordering = ['order']
+    
+    def __str__(self):
+        return self.name
+
+
+class PCComponent(models.Model):
+    """PC Parçaları - Ürün modeline bağlı"""
+    
+    product = models.OneToOneField(
+        Product, 
+        on_delete=models.CASCADE, 
+        related_name='pc_component',
+        verbose_name="Bağlı Ürün"
+    )
+    component_type = models.ForeignKey(
+        ComponentType, 
+        on_delete=models.CASCADE, 
+        related_name='components',
+        verbose_name="Parça Türü"
+    )
+    
+    # Marka ve Model
+    brand = models.CharField(max_length=100, verbose_name="Marka")
+    model_name = models.CharField(max_length=200, verbose_name="Model")
+    
+    # Uyumluluk için JSON alanı (esnek spec tanımı)
+    # Örnek: {"socket": "AM5", "ram_type": "DDR5", "form_factor": "ATX", "wattage": 750}
+    specifications = models.JSONField(default=dict, verbose_name="Teknik Özellikler")
+    
+    # Uyumluluk kuralları (hangi spec'ler diğer parçalarla eşleşmeli)
+    # Örnek: {"socket": "motherboard.socket", "ram_type": "motherboard.ram_type"}
+    compatibility_rules = models.JSONField(default=dict, blank=True, verbose_name="Uyumluluk Kuralları")
+    
+    is_active = models.BooleanField(default=True, verbose_name="Aktif mi?")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "PC Parçası"
+        verbose_name_plural = "PC Parçaları"
+        ordering = ['component_type__order', 'brand', 'model_name']
+    
+    def __str__(self):
+        return f"{self.brand} {self.model_name} ({self.component_type.name})"
+
+
+class PCBuild(models.Model):
+    """Kullanıcının kaydettiği PC yapılandırmaları"""
+    
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='pc_builds',
+        verbose_name="Kullanıcı"
+    )
+    session_id = models.CharField(max_length=128, null=True, blank=True, verbose_name="Oturum ID")
+    
+    name = models.CharField(max_length=200, blank=True, null=True, verbose_name="Yapılandırma Adı")
+    
+    # Seçilen parçalar
+    components = models.ManyToManyField(
+        PCComponent,
+        through='PCBuildComponent',
+        related_name='builds',
+        verbose_name="Parçalar"
+    )
+    
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Toplam Fiyat")
+    is_complete = models.BooleanField(default=False, verbose_name="Tamamlandı mı?")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "PC Yapılandırması"
+        verbose_name_plural = "PC Yapılandırmaları"
+        ordering = ['-updated_at']
+    
+    def __str__(self):
+        name = self.name or f"Build #{self.id}"
+        return f"{name} - {self.total_price} TL"
+    
+    def calculate_total(self):
+        """Toplam fiyatı hesapla"""
+        total = sum(
+            bc.component.product.price 
+            for bc in self.build_components.select_related('component__product')
+        )
+        self.total_price = total
+        self.save()
+        return total
+    
+    def check_completeness(self):
+        """Zorunlu tüm parçalar seçildi mi?"""
+        required_types = ComponentType.objects.filter(is_required=True).values_list('id', flat=True)
+        selected_types = self.build_components.values_list('component__component_type_id', flat=True)
+        self.is_complete = all(rt in selected_types for rt in required_types)
+        self.save()
+        return self.is_complete
+
+
+class PCBuildComponent(models.Model):
+    """PC Yapılandırması - Parça ilişki tablosu"""
+    
+    build = models.ForeignKey(
+        PCBuild, 
+        on_delete=models.CASCADE, 
+        related_name='build_components'
+    )
+    component = models.ForeignKey(
+        PCComponent, 
+        on_delete=models.CASCADE,
+        related_name='build_selections'
+    )
+    added_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Yapılandırma Parçası"
+        verbose_name_plural = "Yapılandırma Parçaları"
+        unique_together = ['build', 'component']
+    
+    def __str__(self):
+        return f"{self.build} - {self.component}"

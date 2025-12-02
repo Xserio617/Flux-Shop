@@ -14,6 +14,7 @@ import MoonIcon from './icons/MoonIcon';
 import HeartIcon from './icons/HeartIcon';
 import UserIcon from './icons/UserIcon';
 import CartIcon from './icons/CartIcon';
+import PCBuilderIcon from './icons/PCBuilderIcon';
 
 export default function Navbar() {
   const { cart } = useCart();
@@ -65,6 +66,12 @@ export default function Navbar() {
         {/* Favoriler */}
         <Link to="/favorites" className={styles.link} title="Favorilerim" style={{ display: 'flex', alignItems: 'center' }}>
             <HeartIcon size={24} />
+        </Link>
+
+        {/* PC BUILDER LİNKİ - Favoriler ile Sepet arasında */}
+        <Link to="/pc-builder" className={styles.pcBuilderLink} title="PC Topla">
+            <PCBuilderIcon size={22} />
+            <span className={styles.pcBuilderText}>PC Topla</span>
         </Link>
 
         {/* Sepet */}

@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
-from .models import Category, Product, Campaign, SiteConfiguration, Favorite, Review, PromoBanner, ReviewImage, ProductImage, Order, OrderItem, BugReport, Coupon, PaymentSettings, UserBehavior
+from .models import Category, Product, Campaign, SiteConfiguration, Favorite, Review, PromoBanner, ReviewImage, ProductImage, Order, OrderItem, BugReport, Coupon, PaymentSettings, UserBehavior, ComponentType, PCComponent, PCBuild, PCBuildComponent
 
 # 1. KATEGORİLER
 @admin.register(Category)
@@ -214,3 +214,93 @@ class UserBehaviorAdmin(admin.ModelAdmin):
     
     def has_add_permission(self, request):
         return False  # Manuel ekleme yok, otomatik kaydediliyor
+
+
+# ============================================================
+# 13. PC BUILDER (BİLGİSAYAR TOPLAMA) ADMIN
+# ============================================================
+
+@admin.register(ComponentType)
+class ComponentTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'order', 'is_required')
+    list_editable = ('order', 'is_required')
+    search_fields = ('name',)
+    prepopulated_fields = {'slug': ('name',)}
+    ordering = ('order',)
+
+
+@admin.register(PCComponent)
+class PCComponentAdmin(admin.ModelAdmin):
+    list_display = ('get_display_name', 'component_type', 'brand', 'get_price', 'is_active')
+    list_filter = ('component_type', 'brand', 'is_active')
+    search_fields = ('product__name', 'brand', 'model_name')
+    list_editable = ('is_active',)
+    ordering = ('component_type__order', 'brand', 'model_name')
+    autocomplete_fields = ['product']
+    
+    fieldsets = (
+        ('Ürün Bağlantısı', {
+            'fields': ('product', 'component_type'),
+            'description': 'Bu PC parçasının bağlı olduğu ürün ve türü'
+        }),
+        ('Parça Bilgileri', {
+            'fields': ('brand', 'model_name')
+        }),
+        ('Teknik Özellikler (JSON)', {
+            'fields': ('specifications',),
+            'description': '''
+            Örnek formatlar:
+            - İşlemci: {"socket": "AM5", "cores": 8, "threads": 16, "base_clock": "3.4GHz", "tdp": 65}
+            - Anakart: {"socket": "AM5", "ram_type": "DDR5", "form_factor": "ATX", "ram_slots": 4}
+            - RAM: {"type": "DDR5", "speed": 6000, "capacity": "32GB", "kit": "2x16GB"}
+            - Ekran Kartı: {"vram": "12GB", "length_mm": 320, "power_connector": "8pin", "tdp": 250}
+            - PSU: {"wattage": 750, "efficiency": "80+ Gold", "modular": true}
+            - Kasa: {"form_factor": "ATX", "max_gpu_length": 380, "max_cpu_cooler": 165}
+            - SSD: {"capacity": "1TB", "type": "NVMe", "interface": "PCIe 4.0"}
+            '''
+        }),
+        ('Uyumluluk Kuralları (JSON)', {
+            'fields': ('compatibility_rules',),
+            'classes': ('collapse',),
+            'description': '''
+            Hangi spec'ler eşleşmeli? Örnek:
+            - RAM için: {"type": "motherboard.ram_type"}
+            - İşlemci için: {"socket": "motherboard.socket"}
+            '''
+        }),
+        ('Durum', {
+            'fields': ('is_active',)
+        }),
+    )
+    
+    def get_display_name(self, obj):
+        return f"{obj.brand} {obj.model_name}"
+    get_display_name.short_description = "Parça Adı"
+    
+    def get_price(self, obj):
+        return f"{obj.product.price} TL"
+    get_price.short_description = "Fiyat"
+
+
+class PCBuildComponentInline(admin.TabularInline):
+    model = PCBuildComponent
+    extra = 0
+    readonly_fields = ('component', 'added_at')
+    can_delete = True
+    
+    def has_add_permission(self, request, obj=None):
+        return False  # Inline'dan ekleme yok, API ile eklenir
+
+
+@admin.register(PCBuild)
+class PCBuildAdmin(admin.ModelAdmin):
+    list_display = ('get_build_name', 'user', 'total_price', 'is_complete', 'created_at')
+    list_filter = ('is_complete', 'created_at')
+    search_fields = ('name', 'user__email')
+    readonly_fields = ('total_price', 'is_complete', 'created_at', 'updated_at')
+    inlines = [PCBuildComponentInline]
+    ordering = ('-updated_at',)
+    
+    def get_build_name(self, obj):
+        return obj.name or f"Build #{obj.id}"
+    get_build_name.short_description = "Yapılandırma"

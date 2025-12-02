@@ -46,6 +46,18 @@ from .serializers import (
 )
 from .serializers import UserBehaviorSerializer
 
+# PC BUILDER IMPORTS
+from .models import ComponentType, PCComponent, PCBuild, PCBuildComponent
+from .serializers import (
+    ComponentTypeSerializer, 
+    PCComponentSerializer, 
+    PCComponentListSerializer,
+    PCBuildSerializer,
+    PCBuildCreateSerializer,
+    AddComponentToBuildSerializer,
+    PCBuildComponentSerializer
+)
+
 # 1. KATEGORİ LİSTELEME (Sadece Ana Kategoriler + Alt Kategorileriyle)
 class CategoryList(generics.ListAPIView):
     # Sadece parent'ı olmayan (ana) kategorileri getir
@@ -1225,3 +1237,289 @@ Fiyatı belirlerken:
                 'source': None
             }
 
+
+# ============================================================
+# 18. PC BUILDER (BİLGİSAYAR TOPLAMA) API'LERİ
+# ============================================================
+
+class ComponentTypeListView(generics.ListAPIView):
+    """Tüm parça türlerini listele (İşlemci, Anakart, RAM, vb.)"""
+    queryset = ComponentType.objects.all().order_by('order')
+    serializer_class = ComponentTypeSerializer
+    permission_classes = [permissions.AllowAny]
+
+
+class PCComponentListView(generics.ListAPIView):
+    """Parça türüne göre PC parçalarını listele"""
+    serializer_class = PCComponentListSerializer
+    permission_classes = [permissions.AllowAny]
+    
+    def get_queryset(self):
+        queryset = PCComponent.objects.filter(is_active=True).select_related('product', 'component_type')
+        
+        # Parça türüne göre filtrele
+        component_type = self.request.query_params.get('type')
+        if component_type:
+            queryset = queryset.filter(component_type__slug=component_type)
+        
+        # Marka filtresi
+        brand = self.request.query_params.get('brand')
+        if brand:
+            queryset = queryset.filter(brand__iexact=brand)
+        
+        # Fiyat filtresi
+        min_price = self.request.query_params.get('min_price')
+        max_price = self.request.query_params.get('max_price')
+        if min_price:
+            queryset = queryset.filter(product__price__gte=min_price)
+        if max_price:
+            queryset = queryset.filter(product__price__lte=max_price)
+        
+        return queryset.order_by('product__price')
+
+
+class PCComponentDetailView(generics.RetrieveAPIView):
+    """Tek bir PC parçasının detayını getir"""
+    queryset = PCComponent.objects.filter(is_active=True)
+    serializer_class = PCComponentSerializer
+    permission_classes = [permissions.AllowAny]
+
+
+class PCBuildListCreateView(generics.ListCreateAPIView):
+    """Kullanıcının PC yapılandırmalarını listele ve yeni oluştur"""
+    permission_classes = [permissions.AllowAny]  # Misafirler de build oluşturabilsin
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return PCBuildCreateSerializer
+        return PCBuildSerializer
+    
+    def get_queryset(self):
+        user = self.request.user if self.request.user.is_authenticated else None
+        session_id = self.request.query_params.get('session_id')
+        
+        if user:
+            return PCBuild.objects.filter(user=user).prefetch_related('build_components__component__product')
+        elif session_id:
+            return PCBuild.objects.filter(session_id=session_id).prefetch_related('build_components__component__product')
+        return PCBuild.objects.none()
+    
+    def perform_create(self, serializer):
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(user=user)
+
+
+class PCBuildDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """PC yapılandırması detay, güncelleme ve silme"""
+    serializer_class = PCBuildSerializer
+    permission_classes = [permissions.AllowAny]
+    
+    def get_queryset(self):
+        user = self.request.user if self.request.user.is_authenticated else None
+        session_id = self.request.query_params.get('session_id')
+        
+        if user:
+            return PCBuild.objects.filter(user=user)
+        elif session_id:
+            return PCBuild.objects.filter(session_id=session_id)
+        return PCBuild.objects.none()
+
+
+class AddComponentToBuildView(APIView):
+    """Build'e parça ekle"""
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request, build_id):
+        serializer = AddComponentToBuildSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        component_id = serializer.validated_data['component_id']
+        
+        # Build'i bul
+        user = request.user if request.user.is_authenticated else None
+        session_id = request.data.get('session_id')
+        
+        try:
+            if user:
+                build = PCBuild.objects.get(id=build_id, user=user)
+            elif session_id:
+                build = PCBuild.objects.get(id=build_id, session_id=session_id)
+            else:
+                return Response({'error': 'Yetkilendirme gerekli'}, status=status.HTTP_401_UNAUTHORIZED)
+        except PCBuild.DoesNotExist:
+            return Response({'error': 'Build bulunamadı'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Parçayı bul
+        component = PCComponent.objects.get(id=component_id)
+        
+        # Aynı türde başka parça varsa kaldır (her türden sadece 1 tane)
+        PCBuildComponent.objects.filter(
+            build=build, 
+            component__component_type=component.component_type
+        ).delete()
+        
+        # Yeni parçayı ekle
+        PCBuildComponent.objects.create(build=build, component=component)
+        
+        # Toplam fiyatı güncelle
+        build.calculate_total()
+        build.check_completeness()
+        
+        return Response({
+            'status': 'success',
+            'message': f'{component.component_type.name} eklendi',
+            'total_price': float(build.total_price),
+            'is_complete': build.is_complete
+        })
+
+
+class RemoveComponentFromBuildView(APIView):
+    """Build'den parça kaldır"""
+    permission_classes = [permissions.AllowAny]
+    
+    def delete(self, request, build_id, component_id):
+        user = request.user if request.user.is_authenticated else None
+        session_id = request.query_params.get('session_id')
+        
+        try:
+            if user:
+                build = PCBuild.objects.get(id=build_id, user=user)
+            elif session_id:
+                build = PCBuild.objects.get(id=build_id, session_id=session_id)
+            else:
+                return Response({'error': 'Yetkilendirme gerekli'}, status=status.HTTP_401_UNAUTHORIZED)
+        except PCBuild.DoesNotExist:
+            return Response({'error': 'Build bulunamadı'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Parçayı kaldır
+        deleted, _ = PCBuildComponent.objects.filter(build=build, component_id=component_id).delete()
+        
+        if deleted:
+            build.calculate_total()
+            build.check_completeness()
+            return Response({
+                'status': 'success',
+                'message': 'Parça kaldırıldı',
+                'total_price': float(build.total_price),
+                'is_complete': build.is_complete
+            })
+        
+        return Response({'error': 'Parça bulunamadı'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class CompatibleComponentsView(APIView):
+    """Mevcut build'e uyumlu parçaları getir"""
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request, build_id):
+        component_type_slug = request.query_params.get('type')
+        
+        if not component_type_slug:
+            return Response({'error': 'Parça türü (type) gerekli'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = request.user if request.user.is_authenticated else None
+        session_id = request.query_params.get('session_id')
+        
+        try:
+            if user:
+                build = PCBuild.objects.get(id=build_id, user=user)
+            elif session_id:
+                build = PCBuild.objects.get(id=build_id, session_id=session_id)
+            else:
+                # Build olmadan tüm parçaları getir
+                components = PCComponent.objects.filter(
+                    is_active=True,
+                    component_type__slug=component_type_slug
+                ).select_related('product', 'component_type')
+                serializer = PCComponentListSerializer(components, many=True)
+                return Response({
+                    'components': serializer.data,
+                    'filtered': False
+                })
+        except PCBuild.DoesNotExist:
+            return Response({'error': 'Build bulunamadı'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Build'deki mevcut parçaların spec'lerini topla
+        current_specs = {}
+        for bc in build.build_components.select_related('component__component_type'):
+            component = bc.component
+            type_slug = component.component_type.slug
+            current_specs[type_slug] = component.specifications
+        
+        # İstenen türdeki tüm parçaları al
+        components = PCComponent.objects.filter(
+            is_active=True,
+            component_type__slug=component_type_slug
+        ).select_related('product', 'component_type')
+        
+        # Uyumluluk kontrolü
+        compatible_components = []
+        for comp in components:
+            is_compatible = True
+            incompatibility_reason = None
+            
+            # Bu parçanın uyumluluk kurallarını kontrol et
+            for spec_key, required_match in comp.compatibility_rules.items():
+                # required_match formatı: "motherboard.socket" gibi
+                if '.' in required_match:
+                    ref_type, ref_spec = required_match.split('.', 1)
+                    if ref_type in current_specs:
+                        ref_value = current_specs[ref_type].get(ref_spec)
+                        comp_value = comp.specifications.get(spec_key)
+                        
+                        if ref_value and comp_value and ref_value != comp_value:
+                            is_compatible = False
+                            incompatibility_reason = f"{spec_key}: {comp_value} ≠ {ref_value}"
+                            break
+            
+            comp_data = PCComponentListSerializer(comp).data
+            comp_data['is_compatible'] = is_compatible
+            comp_data['incompatibility_reason'] = incompatibility_reason
+            compatible_components.append(comp_data)
+        
+        # Uyumlu olanları üste al
+        compatible_components.sort(key=lambda x: (not x['is_compatible'], x['price']))
+        
+        return Response({
+            'components': compatible_components,
+            'filtered': True,
+            'current_specs': current_specs
+        })
+
+
+class AddBuildToCartView(APIView):
+    """Build'deki tüm parçaları sepete ekle"""
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request, build_id):
+        user = request.user if request.user.is_authenticated else None
+        session_id = request.data.get('session_id')
+        
+        try:
+            if user:
+                build = PCBuild.objects.get(id=build_id, user=user)
+            elif session_id:
+                build = PCBuild.objects.get(id=build_id, session_id=session_id)
+            else:
+                return Response({'error': 'Yetkilendirme gerekli'}, status=status.HTTP_401_UNAUTHORIZED)
+        except PCBuild.DoesNotExist:
+            return Response({'error': 'Build bulunamadı'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Build'deki parçaları al
+        cart_items = []
+        for bc in build.build_components.select_related('component__product'):
+            product = bc.component.product
+            cart_items.append({
+                'product_id': product.id,
+                'name': product.name,
+                'price': float(product.price),
+                'image': product.image.url if product.image else None,
+                'component_type': bc.component.component_type.name
+            })
+        
+        return Response({
+            'status': 'success',
+            'message': f'{len(cart_items)} parça sepete eklendi',
+            'cart_items': cart_items,
+            'total_price': float(build.total_price)
+        })

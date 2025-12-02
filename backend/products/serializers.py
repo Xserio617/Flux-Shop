@@ -189,4 +189,102 @@ class CouponSerializer(serializers.ModelSerializer):
         fields = ('code', 'discount_percentage', 'valid_from', 'valid_to', 'active', 'min_purchase_amount', 'max_discount_amount')
 
 
+# ============================================================
+# 11. PC BUILDER SERIALIZERS
+# ============================================================
+from .models import ComponentType, PCComponent, PCBuild, PCBuildComponent
+
+
+class ComponentTypeSerializer(serializers.ModelSerializer):
+    """Parça türleri serializer"""
+    class Meta:
+        model = ComponentType
+        fields = ('id', 'name', 'slug', 'icon', 'order', 'is_required')
+
+
+class PCComponentSerializer(serializers.ModelSerializer):
+    """PC Parçası serializer"""
+    product_details = ProductSerializer(source='product', read_only=True)
+    component_type_name = serializers.ReadOnlyField(source='component_type.name')
+    price = serializers.ReadOnlyField(source='product.price')
+    image = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = PCComponent
+        fields = (
+            'id', 'product', 'product_details', 'component_type', 'component_type_name',
+            'brand', 'model_name', 'specifications', 'compatibility_rules',
+            'price', 'image', 'is_active'
+        )
+    
+    def get_image(self, obj):
+        if obj.product and obj.product.image:
+            return obj.product.image.url
+        return None
+
+
+class PCComponentListSerializer(serializers.ModelSerializer):
+    """PC Parçası listesi için hafif serializer"""
+    price = serializers.ReadOnlyField(source='product.price')
+    image = serializers.SerializerMethodField()
+    product_name = serializers.ReadOnlyField(source='product.name')
+    
+    class Meta:
+        model = PCComponent
+        fields = (
+            'id', 'product', 'product_name', 'component_type',
+            'brand', 'model_name', 'specifications', 'price', 'image'
+        )
+    
+    def get_image(self, obj):
+        if obj.product and obj.product.image:
+            return obj.product.image.url
+        return None
+
+
+class PCBuildComponentSerializer(serializers.ModelSerializer):
+    """Build içindeki parça detayı"""
+    component_details = PCComponentListSerializer(source='component', read_only=True)
+    
+    class Meta:
+        model = PCBuildComponent
+        fields = ('id', 'component', 'component_details', 'added_at')
+
+
+class PCBuildSerializer(serializers.ModelSerializer):
+    """PC Yapılandırması serializer"""
+    build_components = PCBuildComponentSerializer(many=True, read_only=True)
+    component_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = PCBuild
+        fields = (
+            'id', 'user', 'session_id', 'name', 'build_components',
+            'total_price', 'is_complete', 'component_count', 'created_at', 'updated_at'
+        )
+        read_only_fields = ('user', 'total_price', 'is_complete', 'created_at', 'updated_at')
+    
+    def get_component_count(self, obj):
+        return obj.build_components.count()
+
+
+class PCBuildCreateSerializer(serializers.ModelSerializer):
+    """Build oluşturma serializer"""
+    class Meta:
+        model = PCBuild
+        fields = ('name', 'session_id')
+
+
+class AddComponentToBuildSerializer(serializers.Serializer):
+    """Build'e parça ekleme serializer"""
+    component_id = serializers.IntegerField()
+    
+    def validate_component_id(self, value):
+        try:
+            PCComponent.objects.get(id=value, is_active=True)
+        except PCComponent.DoesNotExist:
+            raise serializers.ValidationError("Geçersiz veya aktif olmayan parça.")
+        return value
+
+
 

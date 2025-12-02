@@ -42,6 +42,34 @@
     border-color: var(--primary-color);
 }
 
+/* PC BUILDER LİNKİ */
+.pcBuilderLink {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+}
+
+.pcBuilderLink:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);
+}
+
+.pcBuilderText {
+    display: inline;
+}
+
 .searchInput {
     width: 100%;
     padding: 12px 15px;
@@ -169,6 +197,15 @@
     .cartBtnText {
         display: none;
     }
+    
+    .pcBuilderLink {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    
+    .pcBuilderText {
+        display: none;
+    }
 }
 
 /* ==================== MOBİL ==================== */
@@ -207,6 +244,12 @@
     .searchBtn {
         padding: 0 15px;
         font-size: 13px;
+    }
+    
+    .pcBuilderLink {
+        padding: 6px 10px;
+        font-size: 12px;
+        border-radius: 8px;
     }
     
     .cartBtn {

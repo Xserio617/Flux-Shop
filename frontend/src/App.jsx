@@ -20,6 +20,7 @@ import ReturnsPage from "./components/ReturnsPage";
 import CareersPage from "./components/CareersPage";
 import ContactPage from "./components/ContactPage";
 import OrdersPage from "./components/OrdersPage";
+import PCBuilderPage from "./components/PCBuilderPage";
 
 // Ana Sayfa Bileşenleri
 import HeroSlider from "./components/HeroSlider";
@@ -79,6 +80,7 @@ function App() {
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/search" element={<SearchResultsPage />} />
+          <Route path="/pc-builder" element={<PCBuilderPage />} />
           
           {/* --- ÖDEME SÜRECİ --- */}
           <Route path="/checkout" element={<CheckoutPage />} />
