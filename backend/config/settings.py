@@ -30,9 +30,30 @@ GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '994681019100-121g9v8ps9ma
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-p^!1!hqkymf9)#lgbyo$%1u0xlf5r-$$p&_p$plo(#&$($%!-u')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['cemcedimoglu.me', 'www.cemcedimoglu.me', 'localhost', '127.0.0.1']
+
+# ============== GÜVENLİK AYARLARI ==============
+# HTTPS ayarları (production'da aktif)
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = False  # Cloudflare/Nginx bunu hallediyor
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000  # 1 yıl
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+# CSRF güvenilir kaynaklar
+CSRF_TRUSTED_ORIGINS = [
+    'https://cemcedimoglu.me',
+    'https://www.cemcedimoglu.me',
+]
+# ===============================================
 
 
 # Application definition
@@ -166,13 +187,31 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media_files')
 FILE_UPLOAD_PERMISSIONS = 0o644
 FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    'https://cemcedimoglu.me',
+    'https://www.cemcedimoglu.me',
+]
+# Development ortamında tüm originlere izin ver
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
 
 # 1. REST Framework'e varsayılan doğrulama (Authentication) yöntemini söylemek:
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    # Rate Limiting / Throttling
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/minute',     # Anonim kullanıcılar: dakikada 100 istek
+        'user': '300/minute',     # Giriş yapmış kullanıcılar: dakikada 300 istek
+        'login': '5/minute',      # Login denemesi: dakikada 5
+    }
 }
 
 # 2. JWT Ayarları (Token Ömrü vs.):

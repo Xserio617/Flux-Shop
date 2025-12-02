@@ -2,6 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.throttling import AnonRateThrottle
 from .serializers import CustomUserRegisterSerializer, UserSerializer, ChangePasswordSerializer, ChangeUsernameSerializer, UserAddressSerializer
 from .models import CustomUser, UserAddress
 from google.oauth2 import id_token
@@ -9,9 +10,15 @@ from google.auth.transport import requests as google_requests
 from django.conf import settings
 
 
+# Özel Rate Limit: Login için dakikada 5 deneme
+class LoginRateThrottle(AnonRateThrottle):
+    rate = '5/minute'
+
+
 class GoogleLoginView(APIView):
     """Google OAuth ile giriş"""
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [LoginRateThrottle]  # Login rate limit
     
     def post(self, request):
         token = request.data.get('credential')
@@ -84,6 +91,7 @@ class UserRegisterView(generics.CreateAPIView):
     # Bu view, sadece POST (oluşturma) işlemi yapacak
     permission_classes = [permissions.AllowAny] # Herkese açık (Login gerektirmez)
     serializer_class = CustomUserRegisterSerializer
+    throttle_classes = [LoginRateThrottle]  # Kayıt rate limit
     
     # Kullanıcı kaydı başarılı olursa, 201 Created döndür
     def create(self, request, *args, **kwargs):
