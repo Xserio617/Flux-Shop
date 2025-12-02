@@ -27,15 +27,6 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('category',)
     search_fields = ('name',)
     inlines = [ProductImageInline]
-    
-    # AI butonu için özel template
-    change_form_template = 'admin/products/product/change_form.html'
-    add_form_template = 'admin/products/product/change_form.html'
-    
-    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
-        extra_context = extra_context or {}
-        extra_context['categories'] = Category.objects.all()
-        return super().changeform_view(request, object_id, form_url, extra_context)
 
 # 3. KAMPANYA BANNERLARI (Hero Slider)
 @admin.register(Campaign)
