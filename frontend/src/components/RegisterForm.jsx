@@ -1,13 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import ReCAPTCHA from 'react-google-recaptcha';
 import { GoogleLogin } from '@react-oauth/google';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../utils/api';
 
-const RECAPTCHA_SITE_KEY = '6LeKNBgsAAAAAG-P9vA_YrH7Z7mua2Xm-W-A-NTJ';
+const TURNSTILE_SITE_KEY = '0x4AAAAAACEf73SiikkSk5p2';
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -16,18 +16,13 @@ export default function RegisterForm() {
     password: '',
     password2: '',
   });
-  const [captchaVerified, setCaptchaVerified] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const recaptchaRef = useRef(null);
+  const [turnstileToken, setTurnstileToken] = useState(null);
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleCaptchaChange = (value) => {
-    setCaptchaVerified(!!value);
   };
 
   // Google ile kayıt/giriş başarılı
@@ -64,8 +59,8 @@ export default function RegisterForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!captchaVerified) {
-      toast.error('Lütfen robot olmadığınızı doğrulayın! 🤖', { theme: "colored" });
+    if (!turnstileToken) {
+      toast.error('Lütfen doğrulamayı tamamlayın! 🤖', { theme: "colored" });
       return;
     }
     
@@ -81,9 +76,6 @@ export default function RegisterForm() {
       } else {
         toast.error('Sunucu hatası.', { theme: "colored" });
       }
-      // Hata durumunda captcha'yı sıfırla
-      recaptchaRef.current?.reset();
-      setCaptchaVerified(false);
     }
   };
 
@@ -144,11 +136,14 @@ export default function RegisterForm() {
         <input type="password" name="password2" placeholder="Şifre Tekrarı" onChange={handleChange} required style={inputStyle}/>
         
         <div style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
-          <ReCAPTCHA
-            ref={recaptchaRef}
-            sitekey={RECAPTCHA_SITE_KEY}
-            onChange={handleCaptchaChange}
-            theme="dark"
+          <Turnstile
+            siteKey={TURNSTILE_SITE_KEY}
+            onSuccess={(token) => setTurnstileToken(token)}
+            onError={() => setTurnstileToken(null)}
+            onExpire={() => setTurnstileToken(null)}
+            options={{
+              theme: 'dark',
+            }}
           />
         </div>
         
@@ -159,10 +154,10 @@ export default function RegisterForm() {
             padding: '12px', 
             fontSize: '16px', 
             marginTop: '10px',
-            opacity: captchaVerified ? 1 : 0.6,
-            cursor: captchaVerified ? 'pointer' : 'not-allowed'
+            opacity: turnstileToken ? 1 : 0.6,
+            cursor: turnstileToken ? 'pointer' : 'not-allowed'
           }}
-          disabled={!captchaVerified}
+          disabled={!turnstileToken}
         >
           HEMEN ÜYE OL
         </button>
